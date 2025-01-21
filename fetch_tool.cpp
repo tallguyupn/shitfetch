@@ -1,7 +1,6 @@
 /* to do list
-1. make a gpu detector
-2. make a linux logo
-3. make a ram detector
+1. make a linux logo
+2. make a ram detector
 */
 
 
@@ -23,6 +22,7 @@ std::string cpu (const std::string& cpu);
 //function to get the core amount
 int cores_amount (const int& core_amount1);
 
+//gpu detector (not working as of now, returns an empty value)
 std::string gpu (const std::string& gpuinfo);
 
 int main (){
@@ -104,22 +104,31 @@ int cores_amount (const int& core_amount1){
 
 std::string gpu (const std::string& gpuinfo) {
     system("touch /tmp/gpu.txt");
-    system("lshw -quiet -C display | grep 'product' >> /tmp/gpu.txt");
+    system("lshw -quiet -C display | grep 'product' > /tmp/gpu.txt");
+    system("clear");
 
     std::ifstream infile("/tmp/gpu.txt");
     if (!infile) {
         throw std::runtime_error("Gpu info not found");
     }
 
+    std::string line;
     std::string GPU_info;
     
-    if (infile.is_open()) {
-        std::string GPU_substr = GPU_info.substr(GPU_info.find(":") +1);
+      // Read the file line by line
+    while (std::getline(infile, line)) {
+        if (line.find("product:") != std::string::npos) {
+            // Extract the GPU name after "product:"
+            GPU_info = line.substr(line.find(":") + 1);
+            break;
+        }
     }
-    else {
-        throw std::runtime_error("file not open");
-    }
-    system("rm /tmp/gpu.txt");
+    infile.close();
 
-    return GPU_info; 
+    system("rm -r /tmp/gpu.txt");
+
+    GPU_info.erase(0, GPU_info.find_first_not_of(" \t"));
+    GPU_info.erase(GPU_info.find_last_not_of(" \t") + 1);
+
+    return GPU_info.empty() ? "gpu not availible" : GPU_info; 
 }
